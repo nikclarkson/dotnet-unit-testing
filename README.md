@@ -38,7 +38,7 @@ The following is an example of a `[Fact]`
 
 ``` csharp 
     [Fact]
-    public void A_Test()
+    public void Fact_Test()
     {
         var calculator = new Calculator("la calculadora"); 
 
@@ -90,4 +90,68 @@ We *Arrange* the test by creating an instance of our SUT(Subject Under Test) the
 Now we can *Act* on the **SUT** by calling its `Sum()` method.  
 
 We gain value from our tests by *Assert*ing that something in partular has happened and we have received the expected result.  Being specific and intentional with our Asserts is important.  Code coverage numbers can be achived through *Arrange* & *Act* but the value of a test is realized in the quality of its *Assert*(ions). 
+
+
+### Moq
+
+Imagine for a moment that we have the world's greatest ordering system
+
+``` csharp 
+public class OrdersController
+{
+    private readonly IPaymentService _paymentService;
+    private readonly IShippingService _shippingService;
+    private readonly IAuditLogger _auditLogger;
+
+    public OrdersController(IPaymentService paymentService, 
+                            IShippingService shippingService, 
+                            IAuditLogger auditLogger)
+    {
+        _paymentService = paymentService;
+        _shippingService = shippingService;
+        _auditLogger = auditLogger;
+    }
+
+    public OrderResponse SubmitOrder(Order order)
+    {
+        OrderResponse response;
+
+        try
+        {
+            var paymentResult = _paymentService.Pay(order);
+            ShippingResult shippingResult = null;
+
+            if (paymentResult.Success)
+            {
+                shippingResult = _shippingService.Ship(order);
+            }
+
+            response = new OrderResponse
+            {
+                Success = paymentResult.Success && shippingResult.Success,
+                PaymentResult = paymentResult,
+                ShippingResult = shippingResult
+            };
+
+            _auditLogger.LogOrder(order, response);
+        }
+        catch (Exception)
+        {
+            response = new OrderResponse { Success = false };
+        }
+
+        return response;
+    }
+}
+```
+
+### AutoFixture 
+
+
+### Fluent Assertions
+
+### MassTransit
+https://masstransit-project.com/usage/testing.html
+
+
 

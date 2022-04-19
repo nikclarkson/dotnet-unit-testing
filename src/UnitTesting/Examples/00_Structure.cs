@@ -7,13 +7,10 @@ public class Structure
     [Fact]
     public void Fact_Test()
     {
-        // Arrange
         var calculator = new Calculator("la calculadora"); 
 
-        // Act
         var result = calculator.Sum(1, 1);
 
-        // Assert
         Assert.Equal(2, result);
 
     }
@@ -23,13 +20,10 @@ public class Structure
     [InlineData(2147483647, 1, 2147483648)]
     public void Theory_Test(int a, int b, int answer)
     {
-        // Arrange
         var calculator = new Calculator("la calculadora"); 
 
-        // Act
         var result = calculator.Sum(a, b);
 
-        // Assert
         Assert.Equal(answer, result);
     }
 
