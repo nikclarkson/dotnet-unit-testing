@@ -24,7 +24,7 @@ namespace Orders
             try
             {
                 var paymentResult = _paymentService.Pay(order);
-                ShippingResult shippingResult = null;
+                ShippingResult shippingResult = new ShippingResult();
 
                 if (paymentResult.Success)
                 {

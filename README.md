@@ -187,7 +187,7 @@ mock.Verify(...); // Verify allows us to assert that certain interactions with t
 not that great of a test
 ```csharp 
 [Fact]
-public void Should_Ship_Order_When_Payment_Successful()
+public void Ship_Stuff()
 {
     var mockShippingService = new Mock<IShippingService>();
     var mockAuditLogger = new Mock<IAuditLogger>();
@@ -237,7 +237,7 @@ public void Should_Ship_Order_When_Payment_Successful()
 writing a better test by letting Moq Verify help us out
 ```csharp 
 [Fact]
-public void Should_Ship_Order_When_Payment_Successful()
+public void Verify_Order_Shipped_When_Payment_Successful()
 {
     var mockShippingService = new Mock<IShippingService>();
     var mockAuditLogger = new Mock<IAuditLogger>();
@@ -407,53 +407,7 @@ Message:
           IAuditLogger.LogOrder(Order, OrderResponse)
 ```
 
-So far we have been making use of XUnit's `[InlineData]` attribute in building `[Theory]` unit test, but we can also get our test data sets from sources other that attributes. Using XUnit's `[MemberData]` attribute we can specify a data source. In this setup we will be providing a collection of arrays of objects.
-```csharp
-public static IEnumerable<object[]> Data =>
-new List<object[]>
-{
-    new object[] { true },
-    new object[] { false },
-};
-```
-
-Now that we have our `Data` we can tell XUnit that we would like to use it with our `[Theory]`. Since we are using the same data as our previous `[Theory]`'s our test method will still required a single input parameter to pass the data in on each test iteration. 
-```csharp
-[Theory]
-[MemberData(nameof(Data))]
-public void Should_Call_Audit_Logger_When_Order_Attempted_MemberData(bool isSuccessOrder)
-{
-    var mockShippingService = new Mock<IShippingService>();
-    var mockAuditLogger = new Mock<IAuditLogger>();
-    var mockPaymentService = new Mock<IPaymentService>();
-
-    var ordersController = new OrdersController(
-        mockPaymentService.Object,
-        mockShippingService.Object,
-        mockAuditLogger.Object);
-
-    mockPaymentService.Setup(paymentService => paymentService.Pay(It.IsAny<Order>()))
-        .Returns(new PaymentResult
-        {
-            Success = isSuccessOrder
-        });
-
-    mockShippingService.Setup(shippingService => shippingService.Ship(It.IsAny<Order>()))
-        .Returns(new ShippingResult
-        {
-            Success = isSuccessOrder
-        });
-
-    var order = new Order();
-    ordersController.SubmitOrder(order);
-
-    mockAuditLogger.Verify(al => al.LogOrder(
-        It.IsAny<Order>(),
-        It.Is<OrderResponse>(or => or.Success == isSuccessOrder)));
-}
-```
-
-Often we want to know how our code will behave should a compenent that it depends on raises an exception. Moq gives us an easy way of setting up mocks such that when invoked they will throw a particular exception.
+Sometimes we want to know how our code will behave should a compenent that it depends on raises an exception. Moq gives us an easy way of setting up mocks such that when invoked they will throw a particular exception.
 
 ```csharp
 [Fact]

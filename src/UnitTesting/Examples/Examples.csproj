@@ -20,10 +20,12 @@
     </PackageReference>
     <PackageReference Include="Moq" Version="4.17.2" />
     <PackageReference Include="AutoFixture.AutoMoq" Version="4.17.0" />
+    <PackageReference Include="FluentAssertions" Version="6.6.0" />
   </ItemGroup>
 
   <ItemGroup>
     <None Remove="Moq" />
     <None Remove="AutoFixture.AutoMoq" />
+    <None Remove="FluentAssertions" />
   </ItemGroup>
 </Project>
