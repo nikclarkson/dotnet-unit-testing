@@ -2,7 +2,7 @@
 
 ## What is Unit Testing? 
 
-**Unit Testing** in this context refers to writing automated functional tests in code that involve no external dependencies.  If these tests were to include things like accessing a database, calling another service, etc then it would be more along the lines of an **Integration Testing**. 
+For the purposes of this discussion we're going to define **Unit Testing** as writing automated functional tests in code that involve no external dependencies.  If these tests were to include things like accessing a database, calling another service, etc then it would be more along the lines of an **Integration Testing**. 
 > The terms **Unit Test** & **Integration Test** are sometimes defined differently, but for the purposes of this exploration we will be adopting the above definitions. 
 
 ## What are the motivations behind Unit Testing? 
@@ -13,22 +13,22 @@ In the simplest terms - *to help the humans*
 
 * Confidence that bugs won't regress and be found again
 
-* Readability of the code - documents the code base allows new delovopers and your future self a alike to understand the code
+* Readability of the code. Test can help *document* the code base allowing new developers and even your future to better understand the code.
 
-* Maintainability of the code - reduces the fear of change. expanded requirements, enhancements, refactoriings are all things that happen in the course of a piece of software's lifetime. We should have to live in fear of making changes. 
+* Maintainability of the code. Unit tests can reduce the fear of change. Enhancements, refactorings and bug fixes are all things that happen in the course of a piece of software's lifetime. We shouldn't have to live in fear of making changes. 
 
-* Reasonability - we can determine what is reasonable and feasible when looking for a bug and collaborating on it; correcting incorrect assumptions in previous tests
+* Reasonability. Unit tests can help us reason about the code to better understand the code provide better estimates for future changes and be more targeting in reproducing/fixing bugs.
 
-* Communication - We can name tests and assertion in plain language that can match the requirements and allow us to have better collaboration with less technical audiences. 
+* Communication. We can name tests and assertions in plain language that can match the requirements and allow us to have better collaboration with a variety of audiences. 
 
-* Not all but a lot of poorly structured code is difficult to unit test properly. 
+* Write better code. Not all but a lot of poorly structured code is difficult to unit test properly. 
+
 
 ## How do we write Unit Tests in .Net? 
 
-
 ### xUnit 
 
-We will use **xUnit** as our unit testing framework of choice. It has a long, well maintained history and integrates nicely in the dotnet ecosystem. 
+We will use **xUnit** as our unit testing framework of choice. It has a long, well maintained history and integrates nicely in the .net ecosystem. 
 
 The major feature of **xUnit** that we're intrested is leveraging its *[attributes]* that allows our build tooling to recognize and execute code as unit tests.  
 
@@ -50,12 +50,11 @@ The following is an example of a `[Fact]`
 
 In the above test we've created an instance of the `Calculator` class. It is our SUT (Subject Under Test).  This test expects that the assertion will always hold true for the give call to the calulator's `Sum` method. 
 
-If we wanted to test the `Sum` method with different input parameters we could do so, but we would encounter some values that wouldn't pass if you simply added the numbers yourself and used that answer as the expected value. Since our calculator uses Int32 types for parameters and return type we can exceed the int.MaxValue to contrive an example of a situation that might not hold true for all values. We could avoid this by using a `[Theory]` and only testing only the values we expect to hold true or even possibly test all values but adjust the expect values accordingly.
-
+Testing the `Sum` method as a `[Theory]` providing different values to the same tests. Each set of inputs will be evaluated as a separate test run. 
 ``` csharp
     [Theory]
-    [InlineData(2147483646, 1, 2147483647)] // This test will pass
-    [InlineData(2147483647, 1, 2147483648)] // This test will fail since 2147483647 is int.MaxValue
+    [InlineData(2147483646, 1, 2147483647)] 
+    [InlineData(2147483647, 1, 2147483648)] 
     public void Theory_Test(int a, int b, int answer)
     {
         var calculator = new Calculator("la calculadora"); 
@@ -95,7 +94,7 @@ A `[ClassData]` attribute is also provided by **xUnit**. The usage details for t
 
 
 
-*Suddenly A common pattern emerges*
+*Suddenly a common pattern emerges*
 
 ``` csharp
     [Fact]
@@ -112,11 +111,11 @@ A `[ClassData]` attribute is also provided by **xUnit**. The usage details for t
     }
 ```
 
-We *Arrange* the test by creating an instance of our SUT(Subject Under Test) the `Calculator`.  If we had any other depedencies to satisfy this is where we would handle that. 
+We *Arrange* the test by creating an instance of our SUT(Subject Under Test) the `Calculator`.  If we had any other dependencies to satisfy this is where we would handle that. 
 
 Now we can *Act* on the **SUT** by calling its `Sum()` method.  
 
-We gain value from our tests by *Assert*ing that something in partular has happened and we have received the expected result.  Being specific and intentional with our Asserts is important.  Code coverage numbers can be achived through *Arrange* & *Act* but the value of a test is realized in the quality of its *Assert*(ions). 
+We gain value from our tests by *Assert*ing that something in particular has happened and we have received the expected result.  Being specific and intentional with our Asserts is important.  Code coverage numbers can be achieved through *Arrange* & *Act* but the value of a test is realized in the quality of its *Assert*(ions). 
 
 
 ### Moq
@@ -179,12 +178,12 @@ var mock = new Mock<string>();
 ```
 That's it! Now we have a mock in hand, but what does that give us?
 ```csharp
-mock.Object; // this provides us the instance of the mocked type to pass around and interact with
+mock.Object; // Provides us the instance of the mocked type to pass around and interact with
 mock.Setup(...); // Setup allows us to implement behaviors on methods and properties of the mock
 mock.Verify(...); // Verify allows us to assert that certain interactions with the mock instance occurred. 
 ```
 
-not that great of a test
+A so-so test
 ```csharp 
 [Fact]
 public void Ship_Stuff()
@@ -205,7 +204,7 @@ public void Ship_Stuff()
 }
 ```
 
-a little bit better test
+We can improve our test a bit but making a stronger assertion. 
 ```csharp 
 [Fact]
 public void Should_Ship_Order_When_Payment_Successful()
@@ -220,21 +219,27 @@ public void Should_Ship_Order_When_Payment_Successful()
         mockAuditLogger.Object);
 
     mockPaymentService.Setup(paymentService => paymentService.Pay(It.IsAny<Order>()))
-        .Returns(new PaymentResult 
+        .Returns(new PaymentResult
         {
-            Success = true 
+            Success = true
         });
-    
+
+    mockShippingService.Setup(shippingService => shippingService.Ship(It.IsAny<Order>()))
+        .Returns(new ShippingResult
+        {
+            Success = true
+        });
+
     var order = new Order();
     var response = ordersController.SubmitOrder(order);
 
     Assert.NotNull(response);
-    Assert.True(response.ShippingResult.Success)
+    Assert.True(response.ShippingResult.Success);
 }
 ```
 
 
-writing a better test by letting Moq Verify help us out
+We can leverage Moq.Verify() to write a much better test. 
 ```csharp 
 [Fact]
 public void Verify_Order_Shipped_When_Payment_Successful()
@@ -249,16 +254,22 @@ public void Verify_Order_Shipped_When_Payment_Successful()
         mockAuditLogger.Object);
 
     mockPaymentService.Setup(paymentService => paymentService.Pay(It.IsAny<Order>()))
-        .Returns(new PaymentResult 
+        .Returns(new PaymentResult
         {
-            Success = true 
+            Success = true
         });
-    
+
+    mockShippingService.Setup(shippingService => shippingService.Ship(It.IsAny<Order>()))
+        .Returns(new ShippingResult
+        {
+            Success = true
+        });
+
     var order = new Order();
     var response = ordersController.SubmitOrder(order);
 
     Assert.NotNull(response);
-    Assert.True(response.ShippingResult.Success)
+    Assert.True(response.ShippingResult.Success);
 
     mockShippingService.Verify(shippingService => shippingService.Ship(It.IsAny<Order>()), Times.Once);
 }
@@ -287,11 +298,17 @@ public void Should_Only_Call_Ship_Order_On_Successful_Payment(bool isSuccessOrde
             Success = isSuccessOrder
         });
 
+    mockShippingService.Setup(shippingService => shippingService.Ship(It.IsAny<Order>()))
+        .Returns(new ShippingResult
+        {
+            Success = isSuccessOrder
+        });
+
     var order = new Order();
     ordersController.SubmitOrder(order);
 
     mockShippingService.Verify(
-        shippingService => shippingService.Ship(It.IsAny<Order>()), 
+        shippingService => shippingService.Ship(It.IsAny<Order>()),
         isSuccessOrder ? Times.Once() : Times.Never());
 }
 ```
@@ -353,7 +370,7 @@ We can use a **Moq Callback** to help us capture the actual value that is being 
  mockAuditLogger.Setup(al => al.LogOrder(It.IsAny<Order>(), It.IsAny<OrderResponse>()))
                            .Callback<Order, OrderResponse>((o, or) => actualResult = or.PaymentResult.Success);
 ```
-The `Callback()` gives you a chance to inspect the parameters being passed to the mocked method call. We are going to use that opporunity to capture the value we are interested in as the `actualResult` so that a failure message can include both *expected* and *actual* values.
+The `Callback()` gives you a chance to inspect the parameters being passed to the mocked method call. We are going to use that opportunity to capture the value we are interested in as the `actualResult` so that a failure message can include both *expected* and *actual* values.
 ```csharp
 [Theory]
 [InlineData(true)]
@@ -407,11 +424,11 @@ Message:
           IAuditLogger.LogOrder(Order, OrderResponse)
 ```
 
-Sometimes we want to know how our code will behave should a compenent that it depends on raises an exception. Moq gives us an easy way of setting up mocks such that when invoked they will throw a particular exception.
+Sometimes we want to know how our code will behave should a component that it depends on raises an exception. Moq gives us an easy way of setting up mocks such that when invoked they will throw a particular exception.
 
 ```csharp
 [Fact]
-public void Should_Verify_Shipping_Exception_Was_Thrown()
+public void Should_Verify_Shipping_Exception_Is_Handled()
 {
     var mockShippingService = new Mock<IShippingService>();
     var mockAuditLogger = new Mock<IAuditLogger>();
@@ -650,7 +667,7 @@ public void Should_Build_Many_Orders_With_Guid_Only()
 }
 ```
 
-An issue in the previous assertion is that each one of our Orders that was generated had the same OrderId which is bound to cause us some issue in our tests. AutoFixture allows customization of the data generation as well. For our given scenario we can use an `ISpecimenBuilder` to hook into AutoFixture's chain of responsiblity 
+An issue in the previous assertion is that each one of our Orders that was generated had the same OrderId which is bound to cause us some issue in our tests. AutoFixture allows customization of the data generation as well. For our given scenario we can use an `ISpecimenBuilder` to hook into AutoFixture's chain of responsibility 
 ```csharp
 public class OrderBuilder : ISpecimenBuilder
 {
@@ -685,7 +702,6 @@ public void Should_Build_Many_Orders_With_Customization()
 }
 ```
 
-
 ### MassTransit
 
 [MassTransit Test harness](https://masstransit-project.com/usage/testing.html)
@@ -695,3 +711,6 @@ public void Should_Build_Many_Orders_With_Customization()
 
 [Mocks Aren't Stubs - Martin Fowler](https://martinfowler.com/articles/mocksArentStubs.html)
 
+### Thoughts on testing methodologies 
+
+*(discussion)*

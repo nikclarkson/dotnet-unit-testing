@@ -202,7 +202,7 @@ public class MoqExamples
     }
 
     [Fact]
-    public void Should_Verify_Shipping_Exception_Was_Thrown()
+    public void Should_Verify_Shipping_Exception_Is_Handled()
     {
         var mockShippingService = new Mock<IShippingService>();
         var mockAuditLogger = new Mock<IAuditLogger>();
